@@ -18,8 +18,8 @@
     <resource type="download" name="images/" location="/images"/>
     <context>mitelink</context>
   </web-resource>
-  <customfield-type name="Mite Project Selector" i18n-name-key="mite-project-selector.name" key="mite-project-selector" class="org.chiari.jira.mitelink.customfields.MiteProjectSelector">
-    <description key="mite-project-selector.description">The Mite Project Selector Plugin</description>
+  <customfield-type name="Mite-Project Selector" i18n-name-key="mite-project-selector.name" key="mite-project-selector" class="org.chiari.jira.mitelink.customfields.MiteProjectSelector">
+    <description key="mite-project-selector.description">The Mite-Project Selector Plugin</description>
     <resource name="view" type="velocity" location="/templates/customfields/mite-project-selector/view.vm"/>
     <resource name="edit" type="velocity" location="/templates/customfields/mite-project-selector/edit.vm"/>
   </customfield-type>
