@@ -6,11 +6,11 @@
     <artifactId>mitelink</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <organization>
-        <name>Example Company</name>
-        <url>http://www.example.com/</url>
+        <name>Chiari GmbH</name>
+        <url>http://www.chiari.de/</url>
     </organization>
     <name>mitelink</name>
-    <description>This is the org.chiari.jira.mitelink:mitelink plugin for Atlassian JIRA.</description>
+    <description>Provides a custom select-field which links an Issue to a Mite-Project</description>
     <packaging>atlassian-plugin</packaging>
     <dependencies>
         <dependency>
