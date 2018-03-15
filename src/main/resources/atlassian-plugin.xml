@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <atlassian-plugin key="${atlassian.plugin.key}" name="${project.name}" plugins-version="2">
+
   <plugin-info>
     <description>${project.description}</description>
     <version>${project.version}</version>
@@ -9,8 +10,10 @@
     <param name="plugin-logo">images/pluginLogo.png</param>
     <param name="configure.url">/secure/MitelinkConfigurationPageAction.jspa</param>
   </plugin-info>
+
   <!-- add our i18n resource -->
   <resource type="i18n" name="i18n" location="mitelink"/>
+
   <!-- add our web resources -->
   <web-resource key="mitelink-resources" name="mitelink Web Resources">
     <dependency>com.atlassian.auiplugin:ajs</dependency>
@@ -19,11 +22,13 @@
     <resource type="download" name="images/" location="/images"/>
     <context>mitelink</context>
   </web-resource>
+
   <customfield-type name="Mite-Project Selector" i18n-name-key="mite-project-selector.name" key="mite-project-selector" class="org.chiari.jira.mitelink.customfields.MiteProjectCFType">
     <description key="mite-project-selector.description">The Mite-Project Selector Plugin</description>
     <resource name="view" type="velocity" location="/templates/customfields/mite-project-selector/view.vm"/>
     <resource name="edit" type="velocity" location="/templates/customfields/mite-project-selector/edit.vm"/>
   </customfield-type>
+
   <webwork1 key="mitelink-configuration-page" name="Mitelink Configuration Page" i18n-name-key="mitelink-configuration-page.name">
     <description key="mitelink-configuration-page.description">The Mitelink Configuration Page Plugin</description>
     <actions>
@@ -34,4 +39,5 @@
       </action>
     </actions>
   </webwork1>
+
 </atlassian-plugin>

@@ -14,24 +14,20 @@ import com.atlassian.jira.issue.customfields.impl.SelectCFType;
 import com.atlassian.jira.issue.search.SearchContextImpl;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
-
 import org.json.JSONObject;
 import org.json.JSONArray;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 @Scanned
 public class MiteProjectCFType extends SelectCFType {
 
     // TODO@FE: move this to plugin config
-    private String APIEndpoint = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
+    private String endpointURL = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
 
     @ComponentImport
     JiraBaseUrls jiraBaseUrls;
@@ -42,8 +38,8 @@ public class MiteProjectCFType extends SelectCFType {
     @ComponentImport
     CustomFieldValuePersister customFieldValuePersister;
 
-    public MiteProjectCFType(CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls) {
-        super(customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls);
+    public MiteProjectCFType( CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls ) {
+        super( customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls );
         this.optionsManager = optionsManager;
         this.genericConfigManager = genericConfigManager;
         this.customFieldValuePersister = customFieldValuePersister;
@@ -51,113 +47,164 @@ public class MiteProjectCFType extends SelectCFType {
     }
 
     @Override
-    public Map<String, Object> getVelocityParameters(Issue issue, CustomField field, FieldLayoutItem fieldLayoutItem) {
+    public Map<String, Object> getVelocityParameters( Issue issue, CustomField field, FieldLayoutItem fieldLayoutItem ) {
 
-        System.out.println("--- [DEBUG] Called getVelocityParameters() ---");
+        System.out.println( "--- [DEBUG] Called getVelocityParameters() ---" );
 
-        Map params = super.getVelocityParameters(issue, field, fieldLayoutItem);
+        Map params = super.getVelocityParameters( issue, field, fieldLayoutItem );
 
         FieldConfig fieldConfig = null;
 
-        if (issue == null) {
-            System.out.println("--- [DEBUG] Issue is null ---");
-            fieldConfig = field.getReleventConfig(new SearchContextImpl());
+        if ( issue == null ) {
+            System.out.println( "--- [DEBUG] Issue is null ---" );
+            fieldConfig = field.getReleventConfig( new SearchContextImpl() );
         } else {
-            System.out.println("--- [DEBUG] Issue is not null ---");
-            System.out.println(String.format("--- [DEBUG] Issue ID: %d ---", issue.getId()));
-            fieldConfig = field.getRelevantConfig(issue);
+            System.out.println( "--- [DEBUG] Issue is not null ---" );
+            System.out.println( String.format( "--- [DEBUG] Issue ID: %d ---", issue.getId() ) );
+            fieldConfig = field.getRelevantConfig( issue );
         }
 
-        //this.optionsManager.removeCustomFieldOptions(field);
 
-        Options options = this.optionsManager.getOptions(fieldConfig);
-        if (options.isEmpty()) {
+        // fetch current options
+        Options currentOptions = this.optionsManager.getOptions( fieldConfig );
 
-            System.out.println("--- [DEBUG] Options not present - fetching from remote ---");
+        // fetch current projects from mite
+        ArrayList<JSONObject> projectData = GetProjectList();
 
-            ArrayList<JSONObject> projectData = GetProjectList();
+        System.out.println( String.format("--- [DEBUG] Number of fetched Mite-Projects: %d ---", projectData.size()) );
 
-            for (int i = 0; i < projectData.size(); i++) {
+        if ( currentOptions.isEmpty() ) {
 
-                String identifier = "";
+            System.out.println( "--- [DEBUG] Options not present - fetching from remote ---" );
 
-                if (projectData.get(i).has("customer_name")) {
-                    identifier = projectData.get(i).getString("customer_name") + " - ";
-                }
-
-                identifier += projectData.get(i).getString("name");
-
-                this.optionsManager.createOption(fieldConfig, null, null, identifier);
-
+            // simply add all projects as options
+            for ( int i = 0; i < projectData.size(); i++ ) {
+                String optionValue = GetFullProjectName( projectData.get( i ) );
+                this.optionsManager.createOption( fieldConfig, null, null, optionValue );
             }
 
         } else {
-            System.out.println("--- [DEBUG] Options already present ---");
+
+            System.out.println( "--- [DEBUG] Options already present - updating with new values ---" );
+
+            // only insert newly added options by comparing new and old option values
+
+            // build a lookup table containing all current options
+            HashSet<String> currentOptionValues = new HashSet<>();
+
+            for ( Option option : currentOptions ) {
+                currentOptionValues.add( option.getValue() );
+            }
+
+            // compare current options with new ones
+            // if a value is not already present, add it
+            for ( JSONObject project : projectData ) {
+                String optionValue = GetFullProjectName( project );
+                if ( !currentOptionValues.contains( optionValue ) ) {
+                    this.optionsManager.createOption( fieldConfig, null, null, optionValue );
+                }
+            }
+
         }
-        options = this.optionsManager.getOptions(fieldConfig);
 
+        // refresh newly updated options
+        currentOptions = this.optionsManager.getOptions( fieldConfig );
 
+        // create a key,value map that can be handed to the frontend
+        // to be parsed into the fields options
         Map<Long, String> results = new HashMap<>();
-        Long selectedId = (long) -1;
-        boolean selected = false;
-        Object value = field.getValue(issue);
-        if (value != null) {
-            selected = true;
+        Long selectedId = ( long ) -1;
+        boolean hasValue = false;
+        Object value = field.getValue( issue );
+        if ( value != null ) {
+            hasValue = true;
         }
-        for (Option option : options) {
+        for ( Option option : currentOptions ) {
 
-            results.put(option.getOptionId(), option.getValue());
+            results.put( option.getOptionId(), option.getValue() );
 
-            if (selected && value.toString().equals(option.getValue())) {
+            if ( hasValue && value.toString().equals( option.getValue() ) ) {
                 selectedId = option.getOptionId();
             }
 
         }
 
-        params.put("options", results);
-        params.put("selectedId", selectedId);
+        // hand all options and the currently selected id
+        // to the velocity template. this is in addition to
+        // other parameters, such as the current field value.
+        params.put( "options", results );
+        params.put( "selectedId", selectedId );
 
         return params;
     }
 
-    private String SendGETRequest(String url) {
+    /**
+     * Sends a GET request to a remote yolk Mite API-endpoint
+     * Returns the response, which should be a JSON-String
+     * @param url The URL of the endpoint
+     * @return The JSON-response from the server, or an empty string if the request was not successful
+     */
+    private String SendGETRequest( String url ) {
 
         StringBuffer response = new StringBuffer();
 
         try {
-            URL obj = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            URL obj = new URL( url );
+            HttpURLConnection con = ( HttpURLConnection ) obj.openConnection();
 
-            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+            con.setRequestProperty( "User-Agent", "Mozilla/5.0" );
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            BufferedReader in = new BufferedReader( new InputStreamReader( con.getInputStream() ) );
             String inputLine;
 
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+            while ( ( inputLine = in.readLine() ) != null ) {
+                response.append( inputLine );
             }
             in.close();
 
-        } catch (Exception e) {
+        } catch ( Exception e ) {
             e.printStackTrace();
         }
 
         return response.toString();
     }
 
+    /**
+     * Fetches and returns a list of the current Mite-Projects
+     * @return A list of JSONObjects
+     */
     private ArrayList<JSONObject> GetProjectList() {
 
         ArrayList<JSONObject> projects = new ArrayList<>();
 
-        String response = SendGETRequest(this.APIEndpoint);
+        String response = SendGETRequest( this.endpointURL );
 
-        JSONArray jsonarray = new JSONArray(response);
-        for (int i = 0; i < jsonarray.length(); i++) {
-            JSONObject jsonobject = jsonarray.getJSONObject(i);
-            JSONObject project = jsonobject.getJSONObject("project");
-            projects.add(project);
+        JSONArray jsonarray = new JSONArray( response );
+        for ( int i = 0; i < jsonarray.length(); i++ ) {
+            JSONObject jsonobject = jsonarray.getJSONObject( i );
+            JSONObject project = jsonobject.getJSONObject( "project" );
+            projects.add( project );
         }
 
         return projects;
     }
+
+    /**
+     * Builds and returns an identifying name for a specific project
+     * @param project
+     * @return The name of the project
+     */
+    private String GetFullProjectName( JSONObject project ) {
+
+        String identifier = "";
+
+        if ( project.has( "customer_name" ) ) {
+            identifier = project.getString( "customer_name" ) + " - ";
+        }
+
+        identifier += project.getString( "name" );
+
+        return identifier;
+    }
+
 }
