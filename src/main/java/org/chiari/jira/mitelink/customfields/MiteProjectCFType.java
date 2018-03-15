@@ -28,7 +28,7 @@ import java.util.Map;
 
 
 @Scanned
-public class MiteProjectSelector extends SelectCFType {
+public class MiteProjectCFType extends SelectCFType {
 
     // TODO@FE: move this to plugin config
     private String APIEndpoint = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
@@ -42,7 +42,7 @@ public class MiteProjectSelector extends SelectCFType {
     @ComponentImport
     CustomFieldValuePersister customFieldValuePersister;
 
-    public MiteProjectSelector(CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls) {
+    public MiteProjectCFType(CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls) {
         super(customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls);
         this.optionsManager = optionsManager;
         this.genericConfigManager = genericConfigManager;
@@ -53,7 +53,7 @@ public class MiteProjectSelector extends SelectCFType {
     @Override
     public Map<String, Object> getVelocityParameters(Issue issue, CustomField field, FieldLayoutItem fieldLayoutItem) {
 
-        System.out.println("--- [DEBUG] Calling getVelocityParameters() ---");
+        System.out.println("--- [DEBUG] Called getVelocityParameters() ---");
 
         Map params = super.getVelocityParameters(issue, field, fieldLayoutItem);
 
@@ -68,15 +68,16 @@ public class MiteProjectSelector extends SelectCFType {
             fieldConfig = field.getRelevantConfig(issue);
         }
 
+        //this.optionsManager.removeCustomFieldOptions(field);
+
         Options options = this.optionsManager.getOptions(fieldConfig);
         if (options.isEmpty()) {
 
-            System.out.println("--- [DEBUG] Fetching options ---");
+            System.out.println("--- [DEBUG] Options not present - fetching from remote ---");
 
             ArrayList<JSONObject> projectData = GetProjectList();
 
-            //for (int i = 0; i < projectData.size(); i++) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < projectData.size(); i++) {
 
                 String identifier = "";
 
@@ -87,12 +88,14 @@ public class MiteProjectSelector extends SelectCFType {
                 identifier += projectData.get(i).getString("name");
 
                 this.optionsManager.createOption(fieldConfig, null, null, identifier);
+
             }
 
         } else {
             System.out.println("--- [DEBUG] Options already present ---");
         }
         options = this.optionsManager.getOptions(fieldConfig);
+
 
         Map<Long, String> results = new HashMap<>();
         Long selectedId = (long) -1;
@@ -102,11 +105,13 @@ public class MiteProjectSelector extends SelectCFType {
             selected = true;
         }
         for (Option option : options) {
+
             results.put(option.getOptionId(), option.getValue());
 
             if (selected && value.toString().equals(option.getValue())) {
                 selectedId = option.getOptionId();
             }
+
         }
 
         params.put("options", results);

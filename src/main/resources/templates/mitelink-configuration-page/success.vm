@@ -1,0 +1,23 @@
+<html>
+<head>
+    <title>Mitelink Configuration</title>
+    <meta name="decorator" content="atl.admin">
+</head>
+<body>
+
+<h1>Mitelink Configuration</h1>
+
+<form class="aui" action="MitelinkConfigurationPageAction.jspa">
+  <div class="field-group">
+    <label for="config[apikey]">API-Key<span class="aui-icon icon-required"></span><span class="content">required</span></label>
+    <input type="text" id="config[apikey]" name="apikey" title="APIKey" value="$textutils.htmlEncode(${config.apikey})">
+  </div>
+  <div class="buttons-container">
+    <div class="buttons">
+      <input class="button submit" type="submit" value="Save">
+    </div>
+  </div>
+</form>
+
+</body>
+</html>

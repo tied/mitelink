@@ -3,14 +3,14 @@
 #controlHeader ($action $customField.id $customField.name $fieldLayoutItem.required $displayParameters.noHeader)
 
 <select name="$customField.id" id="$customField.id" >
-<option value="">Not selected</option>
-#foreach ($option in $options.entrySet())
-#if ( $selectedId == $option.key )
-<option selected="selected" value="$option.key">$option.value</option>
-#else
-<option value="$option.key">$option.value</option>
-#end
-#end
+  <option value="">None selected</option>
+  #foreach ($option in $options.entrySet())
+    #if ( $selectedId == $option.key )
+    <option selected="selected" value="$option.key">$option.value</option>
+    #else
+    <option value="$option.key">$option.value</option>
+    #end
+  #end
 </select>
 
 #controlFooter ($action $fieldLayoutItem.fieldDescription $displayParameters.noHeader)
