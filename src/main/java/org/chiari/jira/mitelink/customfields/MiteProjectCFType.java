@@ -16,6 +16,10 @@ import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import org.json.JSONObject;
 import org.json.JSONArray;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -26,8 +30,10 @@ import java.util.*;
 @Scanned
 public class MiteProjectCFType extends SelectCFType {
 
+    // TODO@FE: add cache for json request instead of hammering the server
     // TODO@FE: move this to plugin config
-    private String endpointURL = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
+    private static final String endpointURL = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
+    private static final Logger log = LoggerFactory.getLogger( MiteProjectCFType.class );
 
     @ComponentImport
     JiraBaseUrls jiraBaseUrls;
@@ -46,6 +52,15 @@ public class MiteProjectCFType extends SelectCFType {
         this.jiraBaseUrls = jiraBaseUrls;
     }
 
+    /**
+     * Allows passing of additional parameters to the velocity context (beyond the getValueFromIssue methods)
+     * Values are added to all velocity views, e.g edit, search, view, xml
+     *
+     * @param issue
+     * @param field
+     * @param fieldLayoutItem
+     * @return
+     */
     @Override
     public Map<String, Object> getVelocityParameters( Issue issue, CustomField field, FieldLayoutItem fieldLayoutItem ) {
 
@@ -53,7 +68,7 @@ public class MiteProjectCFType extends SelectCFType {
 
         Map params = super.getVelocityParameters( issue, field, fieldLayoutItem );
 
-        FieldConfig fieldConfig = null;
+        FieldConfig fieldConfig;
 
         if ( issue == null ) {
             System.out.println( "--- [DEBUG] Issue is null ---" );
@@ -64,14 +79,13 @@ public class MiteProjectCFType extends SelectCFType {
             fieldConfig = field.getRelevantConfig( issue );
         }
 
-
         // fetch current options
         Options currentOptions = this.optionsManager.getOptions( fieldConfig );
 
         // fetch current projects from mite
         ArrayList<JSONObject> projectData = GetProjectList();
 
-        System.out.println( String.format("--- [DEBUG] Number of fetched Mite-Projects: %d ---", projectData.size()) );
+        System.out.println( String.format( "--- [DEBUG] Number of fetched Mite-Projects: %d ---", projectData.size() ) );
 
         if ( currentOptions.isEmpty() ) {
 
@@ -85,7 +99,7 @@ public class MiteProjectCFType extends SelectCFType {
 
         } else {
 
-            System.out.println( "--- [DEBUG] Options already present - updating with new values ---" );
+            System.out.println( "--- [DEBUG] Options already present - updating with new values, if necessary ---" );
 
             // only insert newly added options by comparing new and old option values
 
@@ -101,6 +115,7 @@ public class MiteProjectCFType extends SelectCFType {
             for ( JSONObject project : projectData ) {
                 String optionValue = GetFullProjectName( project );
                 if ( !currentOptionValues.contains( optionValue ) ) {
+                    System.out.println( String.format( "--- [DEBUG] Adding new option: %s ---", optionValue ) );
                     this.optionsManager.createOption( fieldConfig, null, null, optionValue );
                 }
             }
@@ -141,6 +156,7 @@ public class MiteProjectCFType extends SelectCFType {
     /**
      * Sends a GET request to a remote yolk Mite API-endpoint
      * Returns the response, which should be a JSON-String
+     *
      * @param url The URL of the endpoint
      * @return The JSON-response from the server, or an empty string if the request was not successful
      */
@@ -171,6 +187,7 @@ public class MiteProjectCFType extends SelectCFType {
 
     /**
      * Fetches and returns a list of the current Mite-Projects
+     *
      * @return A list of JSONObjects
      */
     private ArrayList<JSONObject> GetProjectList() {
@@ -191,6 +208,7 @@ public class MiteProjectCFType extends SelectCFType {
 
     /**
      * Builds and returns an identifying name for a specific project
+     *
      * @param project
      * @return The name of the project
      */

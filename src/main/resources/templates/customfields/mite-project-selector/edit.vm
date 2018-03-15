@@ -2,8 +2,7 @@
 #* @vtlvariable name="selectedId" type="java.lang.String" *#
 #controlHeader ($action $customField.id $customField.name $fieldLayoutItem.required $displayParameters.noHeader)
 
-<select name="$customField.id" id="$customField.id" >
-  <option value="">None selected</option>
+<select name="$customField.id" id="$customField.id" class="mite-project-selector-select" >
   #foreach ($option in $options.entrySet())
     #if ( $selectedId == $option.key )
     <option selected="selected" value="$option.key">$option.value</option>

@@ -12,10 +12,8 @@
     <label for="config[apikey]">API-Key<span class="aui-icon icon-required"></span><span class="content">required</span></label>
     <input type="text" id="config[apikey]" name="apikey" title="APIKey" value="$textutils.htmlEncode(${config.apikey})">
   </div>
-  <div class="buttons-container">
-    <div class="buttons">
-      <input class="button submit" type="submit" value="Save">
-    </div>
+  <div class="field-group">
+    <input class="button submit" type="submit" value="Save">
   </div>
 </form>
 

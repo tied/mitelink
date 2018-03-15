@@ -20,7 +20,8 @@
     <resource type="download" name="mitelink.css" location="/css/mitelink.css"/>
     <resource type="download" name="mitelink.js" location="/js/mitelink.js"/>
     <resource type="download" name="images/" location="/images"/>
-    <context>mitelink</context>
+    <context>atl.general</context>
+    <context>atl.admin</context>
   </web-resource>
 
   <customfield-type name="Mite-Project Selector" i18n-name-key="mite-project-selector.name" key="mite-project-selector" class="org.chiari.jira.mitelink.customfields.MiteProjectCFType">
