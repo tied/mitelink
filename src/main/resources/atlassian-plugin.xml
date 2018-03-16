@@ -24,14 +24,14 @@
     <context>atl.admin</context>
   </web-resource>
 
-  <customfield-type name="Mite-Project Selector" i18n-name-key="mite-project-selector.name" key="mite-project-selector" class="org.chiari.jira.mitelink.customfields.MiteProjectCFType">
-    <description key="mite-project-selector.description">The Mite-Project Selector Plugin</description>
+  <customfield-type name="Mite-Project Selector" i18n-name-key="org.chiari.jira.mitelink.mite-project-cf.name" key="mite-project-cf" class="org.chiari.jira.mitelink.customfields.MiteProjectCFType">
+    <description key="org.chiari.jira.mitelink.mite-project-cf.description">The Mite-Project Selector Plugin</description>
     <resource name="view" type="velocity" location="/templates/customfields/mite-project-selector/view.vm"/>
     <resource name="edit" type="velocity" location="/templates/customfields/mite-project-selector/edit.vm"/>
   </customfield-type>
 
-  <servlet name="Config Servlet" i18n-name-key="config-servlet.name" key="config-servlet" class="org.chiari.jira.mitelink.servlet.ConfigServlet">
-    <description key="config-servlet.description">The Config Servlet Plugin</description>
+  <servlet name="Config Servlet" i18n-name-key="org.chiari.jira.mitelink.config-servlet.name" key="config-servlet" class="org.chiari.jira.mitelink.servlet.ConfigServlet">
+    <description key="org.chiari.jira.mitelink.config-servlet.description">The Config Servlet Plugin</description>
     <url-pattern>/mitelink</url-pattern>
   </servlet>
 

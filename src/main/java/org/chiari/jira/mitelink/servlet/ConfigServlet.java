@@ -71,7 +71,7 @@ public class ConfigServlet extends HttpServlet {
         params.put( "account", settings.get( "mitelink.config.account" ) );
 
         response.setContentType( "text/html;charset=utf-8" );
-        renderer.render( "/templates/servlets/configservlet/admin.vm", params, response.getWriter() );
+        renderer.render( "/templates/servlets/configservlet/config.vm", params, response.getWriter() );
     }
 
     @Override

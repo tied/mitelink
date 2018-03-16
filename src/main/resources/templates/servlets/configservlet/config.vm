@@ -1,0 +1,24 @@
+<html>
+  <head>
+
+    <title>$i18n.getText("org.chiari.jira.mitelink.config.headline")</title>
+    <meta name="decorator" content="atl.admin" />
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+  </head>
+  <body>
+    <h1>$i18n.getText("org.chiari.jira.mitelink.config.headline")</h1>
+    <form class="aui mitelink-configuration-form" method="post" action="">
+      <div class="field-group">
+        <label for="config[account]">$i18n.getText("org.chiari.jira.mitelink.config.label.account")<span class="aui-icon icon-required"></span><span class="content">required</span></label>
+        <input type="text" id="config[account]" name="account" title="account" #if ($account)value="$account"#end>
+      </div>
+      <div class="field-group">
+        <label for="config[apikey]">$i18n.getText("org.chiari.jira.mitelink.config.label.apikey")<span class="aui-icon icon-required"></span><span class="content">required</span></label>
+        <input type="text" id="config[apikey]" name="apikey" title="APIKey" #if ($apikey)value="$apikey"#end>
+      </div>
+      <div class="field-group">
+        <input class="button submit" type="submit" value="$i18n.getText("org.chiari.jira.mitelink.config.button.save")">
+      </div>
+    </form>
+  </body>
+</html>
