@@ -14,11 +14,17 @@ import com.atlassian.jira.issue.customfields.impl.SelectCFType;
 import com.atlassian.jira.issue.search.SearchContextImpl;
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
+import com.atlassian.sal.api.pluginsettings.PluginSettings;
+import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
+
+import com.google.gson.JsonObject;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -30,26 +36,29 @@ import java.util.*;
 @Scanned
 public class MiteProjectCFType extends SelectCFType {
 
+    @ComponentImport
+    private final JiraBaseUrls jiraBaseUrls;
+    @ComponentImport
+    private final OptionsManager optionsManager;
+    @ComponentImport
+    private final GenericConfigManager genericConfigManager;
+    @ComponentImport
+    private final CustomFieldValuePersister customFieldValuePersister;
+    @ComponentImport
+    private static PluginSettingsFactory pluginSettingsFactory;
+
     // TODO@FE: add cache for json request instead of hammering the server
-    // TODO@FE: move this to plugin config
-    private static final String endpointURL = "https://kompass-chiari.mite.yo.lk/projects.json?api_key=25cfb27ce28cc08d";
     private static final Logger log = LoggerFactory.getLogger( MiteProjectCFType.class );
+    private static PluginSettings settings;
 
-    @ComponentImport
-    JiraBaseUrls jiraBaseUrls;
-    @ComponentImport
-    OptionsManager optionsManager;
-    @ComponentImport
-    GenericConfigManager genericConfigManager;
-    @ComponentImport
-    CustomFieldValuePersister customFieldValuePersister;
-
-    public MiteProjectCFType( CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls ) {
+    @Inject
+    public MiteProjectCFType( CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls, PluginSettingsFactory pluginSettingsFactory ) {
         super( customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls );
         this.optionsManager = optionsManager;
         this.genericConfigManager = genericConfigManager;
         this.customFieldValuePersister = customFieldValuePersister;
         this.jiraBaseUrls = jiraBaseUrls;
+        this.settings = pluginSettingsFactory.createGlobalSettings();
     }
 
     /**
@@ -92,8 +101,8 @@ public class MiteProjectCFType extends SelectCFType {
             System.out.println( "--- [DEBUG] Options not present - fetching from remote ---" );
 
             // simply add all projects as options
-            for ( int i = 0; i < projectData.size(); i++ ) {
-                String optionValue = GetFullProjectName( projectData.get( i ) );
+            for ( JSONObject project : projectData ) {
+                String optionValue = GetFullProjectName( project );
                 this.optionsManager.createOption( fieldConfig, null, null, optionValue );
             }
 
@@ -194,11 +203,15 @@ public class MiteProjectCFType extends SelectCFType {
 
         ArrayList<JSONObject> projects = new ArrayList<>();
 
-        String response = SendGETRequest( this.endpointURL );
+        String account = ( String ) settings.get( "mitelink.config.account" );
+        String key = ( String ) settings.get( "mitelink.config.apikey" );
+        String url = String.format( "https://%s.mite.yo.lk/projects.json?api_key=%s", account, key );
 
-        JSONArray jsonarray = new JSONArray( response );
-        for ( int i = 0; i < jsonarray.length(); i++ ) {
-            JSONObject jsonobject = jsonarray.getJSONObject( i );
+        String response = SendGETRequest( url );
+
+        JSONArray array = new JSONArray( response );
+        for ( int i = 0; i < array.length(); i++ ) {
+            JSONObject jsonobject = array.getJSONObject( i );
             JSONObject project = jsonobject.getJSONObject( "project" );
             projects.add( project );
         }

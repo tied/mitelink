@@ -8,7 +8,7 @@
     <vendor name="${project.organization.name}" url="${project.organization.url}"/>
     <param name="plugin-icon">images/pluginIcon.png</param>
     <param name="plugin-logo">images/pluginLogo.png</param>
-    <param name="configure.url">/secure/MitelinkConfigurationPageAction.jspa</param>
+    <param name="configure.url">/plugins/servlet/mitelink</param>
   </plugin-info>
 
   <!-- add our i18n resource -->
@@ -30,15 +30,9 @@
     <resource name="edit" type="velocity" location="/templates/customfields/mite-project-selector/edit.vm"/>
   </customfield-type>
 
-  <webwork1 key="mitelink-configuration-page" name="Mitelink Configuration Page" i18n-name-key="mitelink-configuration-page.name">
-    <description key="mitelink-configuration-page.description">The Mitelink Configuration Page Plugin</description>
-    <actions>
-      <action name="org.chiari.jira.mitelink.webwork.MitelinkConfigurationPageAction" alias="MitelinkConfigurationPageAction">
-        <view name="success">/templates/mitelink-configuration-page/success.vm</view>
-        <view name="input">/templates/mitelink-configuration-page/input.vm</view>
-        <view name="error">/templates/mitelink-configuration-page/error.vm</view>
-      </action>
-    </actions>
-  </webwork1>
+  <servlet name="Config Servlet" i18n-name-key="config-servlet.name" key="config-servlet" class="org.chiari.jira.mitelink.servlet.ConfigServlet">
+    <description key="config-servlet.description">The Config Servlet Plugin</description>
+    <url-pattern>/mitelink</url-pattern>
+  </servlet>
 
 </atlassian-plugin>

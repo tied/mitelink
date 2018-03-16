@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Mitelink - Plugin Configuration</title>
+    <meta name="decorator" content="atl.admin" />
+    $webResourceManager.requireResource("com.atlassian.auiplugin:ajs")
+  </head>
+  <body>
+    <h1>Mitelink Configuration</h1>
+    <form class="aui mitelink-configuration-form" method="post" action="">
+      <div class="field-group">
+        <label for="config[account]">yo.lk Account<span class="aui-icon icon-required"></span><span class="content">required</span></label>
+        <input type="text" id="config[account]" name="account" title="account" #if ($account)value="$account"#end>
+      </div>
+      <div class="field-group">
+        <label for="config[apikey]">API-Key<span class="aui-icon icon-required"></span><span class="content">required</span></label>
+        <input type="text" id="config[apikey]" name="apikey" title="APIKey" #if ($apikey)value="$apikey"#end>
+      </div>
+      <div class="field-group">
+        <input class="button submit" type="submit" value="Save">
+      </div>
+    </form>
+  </body>
+</html>
