@@ -40,7 +40,7 @@ AJS.toInit(function($) {
     new AJS.SingleSelect({
       element: selectBox,
       itemAttrDisplayed: 'label',
-      errorMessage: AJS.params.multiselectComponentsError
+      errorMessage: AJS.params.multiselectGenericError
     });
 
   });
