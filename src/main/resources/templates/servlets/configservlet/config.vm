@@ -17,6 +17,9 @@
         <input type="text" id="config[apikey]" name="apikey" title="APIKey" #if ($apikey)value="$apikey"#end>
       </div>
       <div class="field-group">
+          <p class="reqired-fields-info"><span class="aui-icon icon-required"></span><span class="content">required</span> $i18n.getText("org.chiari.jira.mitelink.config.text.requiredFields")</p>
+      </div>
+      <div class="field-group">
         <input class="button submit" type="submit" value="$i18n.getText("org.chiari.jira.mitelink.config.button.save")">
       </div>
     </form>

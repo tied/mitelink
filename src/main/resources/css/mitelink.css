@@ -1,3 +1,12 @@
 form.aui.mitelink-configuration-form .field-group > label {
   padding-top: 0;
 }
+
+form.aui.mitelink-configuration-form .field-group > .reqired-fields-info {
+  position: relative;
+  padding-left: 10px;
+}
+
+form.aui.mitelink-configuration-form .field-group > .reqired-fields-info .aui-icon {
+  left: 0;
+}
