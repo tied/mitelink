@@ -17,7 +17,6 @@ import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 
-import com.google.gson.JsonObject;
 import org.json.JSONObject;
 import org.json.JSONArray;
 

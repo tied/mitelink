@@ -7,6 +7,7 @@ import com.atlassian.jira.security.GlobalPermissionManager;
 import com.atlassian.jira.security.JiraAuthenticationContext;
 import com.atlassian.jira.user.ApplicationUser;
 import com.atlassian.sal.api.auth.LoginUriProvider;
+import com.atlassian.sal.api.message.I18nResolver;
 import com.atlassian.sal.api.pluginsettings.PluginSettings;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
 import com.atlassian.templaterenderer.TemplateRenderer;
@@ -39,18 +40,21 @@ public class ConfigServlet extends HttpServlet {
     private final LoginUriProvider loginUriProvider;
     @ComponentImport
     private static PluginSettingsFactory pluginSettingsFactory;
+    @ComponentImport
+    private static I18nResolver i18n;
 
     private static final Logger log = LoggerFactory.getLogger( ConfigServlet.class );
     private static PluginSettings settings;
 
     @Inject
-    public ConfigServlet( TemplateRenderer renderer, JiraAuthenticationContext jiraAuthenticationContext, GlobalPermissionManager globalPermissionManager, LoginUriProvider loginUriProvider, PluginSettingsFactory pluginSettingsFactory ) {
+    public ConfigServlet( TemplateRenderer renderer, JiraAuthenticationContext jiraAuthenticationContext, GlobalPermissionManager globalPermissionManager, LoginUriProvider loginUriProvider, PluginSettingsFactory pluginSettingsFactory, I18nResolver i18nResolver) {
         this.renderer = renderer;
         this.jiraAuthenticationContext = jiraAuthenticationContext;
         this.globalPermissionManager = globalPermissionManager;
         this.loginUriProvider = loginUriProvider;
         this.pluginSettingsFactory = pluginSettingsFactory;
         this.settings = pluginSettingsFactory.createGlobalSettings();
+        this.i18n = i18nResolver;
     }
 
     @Override
