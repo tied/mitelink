@@ -61,12 +61,9 @@ public class ConfigServlet extends HttpServlet {
     protected void doGet( HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
 
         // check if a user is logged in and if so, if they have the necessary rights to change settings
-        ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
-        if ( user == null || !globalPermissionManager.hasPermission( GlobalPermissionKey.SYSTEM_ADMIN, user ) ) {
-
+        if ( !userIsAdmin() ) {
             URI loginUri = loginUriProvider.getLoginUri( URI.create( request.getServletPath() ) );
             response.sendRedirect( loginUri.toString() );
-
             return;
         }
 
@@ -81,12 +78,20 @@ public class ConfigServlet extends HttpServlet {
     @Override
     protected void doPost( HttpServletRequest req, HttpServletResponse resp ) throws ServletException, IOException {
 
-        System.out.println( "--- [DEBUG] doPost Called ---" );
+        // prevent unauthenticated users from posting to the configuration form
+        if ( !userIsAdmin() ) {
+            resp.sendError( 401, i18n.getText( "org.chiari.jira.mitelink.config.messages.unauthorized" ) );
+        } else {
+            settings.put( "mitelink.config.apikey", req.getParameter( "apikey" ) );
+            settings.put( "mitelink.config.account", req.getParameter( "account" ) );
+            resp.sendRedirect( req.getRequestURI() );
+        }
 
-        settings.put( "mitelink.config.apikey", req.getParameter( "apikey" ) );
-        settings.put( "mitelink.config.account", req.getParameter( "account" ) );
+    }
 
-        resp.sendRedirect( req.getRequestURI() );
+    protected boolean userIsAdmin() {
+        ApplicationUser user = jiraAuthenticationContext.getLoggedInUser();
+        return ( user != null && globalPermissionManager.hasPermission( GlobalPermissionKey.SYSTEM_ADMIN, user ) );
     }
 
 }
