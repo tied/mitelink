@@ -1,4 +1,4 @@
-package org.chiari.jira.mitelink.servlet;
+package org.chiari.jira.mitelink.servlets;
 
 import com.atlassian.plugin.spring.scanner.annotation.component.Scanned;
 import com.atlassian.plugin.spring.scanner.annotation.imports.ComponentImport;

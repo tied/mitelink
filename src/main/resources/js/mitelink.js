@@ -5,13 +5,13 @@ AJS.toInit(function($) {
 
     var options = element.find( 'option' );
     var selected = element.val();
-    
+
     options.sort( function( a, b ) {
         if (a.text > b.text) return 1;
         if (a.text < b.text) return -1;
         return 0
     })
-    
+
     element.empty().append( options );
     element.val( selected );
 

@@ -1,4 +1,4 @@
-package it.org.chiari.jira.mitelink.servlet;
+package it.org.chiari.jira.mitelink.servlets;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.ResponseHandler;
@@ -24,7 +24,7 @@ public class ConfigServletFuncTest {
     public void setup() {
         httpClient = new DefaultHttpClient();
         baseUrl = System.getProperty("baseurl");
-        servletUrl = baseUrl + "/plugins/servlet/configservlet";
+        servletUrl = baseUrl + "/plugins/servlets/configservlet";
     }
 
     @After

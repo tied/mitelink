@@ -1,4 +1,4 @@
-package ut.org.chiari.jira.mitelink.servlet;
+package ut.org.chiari.jira.mitelink.servlets;
 
 import org.junit.Test;
 import org.junit.After;
