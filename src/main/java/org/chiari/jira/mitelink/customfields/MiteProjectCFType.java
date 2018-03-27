@@ -26,8 +26,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
@@ -72,18 +74,18 @@ public class MiteProjectCFType extends SelectCFType {
     @Override
     public Map<String, Object> getVelocityParameters( Issue issue, CustomField field, FieldLayoutItem fieldLayoutItem ) {
 
-        System.out.println( "--- [DEBUG] Called getVelocityParameters() ---" );
+        log.debug( "Called getVelocityParameters" );
 
         Map params = super.getVelocityParameters( issue, field, fieldLayoutItem );
 
         FieldConfig fieldConfig;
 
         if ( issue == null ) {
-            System.out.println( "--- [DEBUG] Issue is null ---" );
+            log.debug( "Issue is null" );
             fieldConfig = field.getReleventConfig( new SearchContextImpl() );
         } else {
-            System.out.println( "--- [DEBUG] Issue is not null ---" );
-            System.out.println( String.format( "--- [DEBUG] Issue ID: %d ---", issue.getId() ) );
+            log.debug( "Issue is not null" );
+            log.debug( "Issue ID: %d", issue.getId() );
             fieldConfig = field.getRelevantConfig( issue );
         }
 
@@ -93,11 +95,11 @@ public class MiteProjectCFType extends SelectCFType {
         // fetch current projects from mite
         ArrayList<JSONObject> projectData = GetProjectList();
 
-        System.out.println( String.format( "--- [DEBUG] Number of fetched Mite-Projects: %d ---", projectData.size() ) );
+        log.debug( "Number of fetched Mite-Projects: %d",projectData.size() );
 
         if ( currentOptions.isEmpty() ) {
 
-            System.out.println( "--- [DEBUG] Options not present - fetching from remote ---" );
+            log.debug( "Options not present - fetching from remote" );
 
             // simply add all projects as options
             for ( JSONObject project : projectData ) {
@@ -107,7 +109,7 @@ public class MiteProjectCFType extends SelectCFType {
 
         } else {
 
-            System.out.println( "--- [DEBUG] Options already present - updating with new values, if necessary ---" );
+            log.debug( "Options already present - updating with new values, if necessary");
 
             // only insert newly added options by comparing new and old option values
 
@@ -123,7 +125,7 @@ public class MiteProjectCFType extends SelectCFType {
             for ( JSONObject project : projectData ) {
                 String optionValue = GetFullProjectName( project );
                 if ( !currentOptionValues.contains( optionValue ) ) {
-                    System.out.println( String.format( "--- [DEBUG] Adding new option: %s ---", optionValue ) );
+                    log.debug( "Adding new option: %s ", optionValue );
                     this.optionsManager.createOption( fieldConfig, null, null, optionValue );
                 }
             }
@@ -186,8 +188,12 @@ public class MiteProjectCFType extends SelectCFType {
             }
             in.close();
 
-        } catch ( Exception e ) {
-            e.printStackTrace();
+        }
+        catch ( MalformedURLException e ) {
+            log.error( "Method SendGETRequest threw MalformedURLException" ,e );
+        }
+        catch ( IOException e ) {
+            log.error( "Method SendGETRequest threw IOException" ,e );
         }
 
         return response.toString();
@@ -206,9 +212,9 @@ public class MiteProjectCFType extends SelectCFType {
         String key = ( String ) settings.get( "mitelink.config.apikey" );
         String url = String.format( "https://%s.mite.yo.lk/projects.json?api_key=%s", account, key );
 
-        String response = SendGETRequest( url );
+        String JSONresponse = SendGETRequest( url );
 
-        JSONArray array = new JSONArray( response );
+        JSONArray array = new JSONArray( JSONresponse );
         for ( int i = 0; i < array.length(); i++ ) {
             JSONObject jsonobject = array.getJSONObject( i );
             JSONObject project = jsonobject.getJSONObject( "project" );
