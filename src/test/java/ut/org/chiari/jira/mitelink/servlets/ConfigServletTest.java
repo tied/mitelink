@@ -28,10 +28,13 @@ public class ConfigServletTest {
     }
 
     @Test
-    public void testSomething() {
-        String expected = "test";
-        when(mockRequest.getParameter(Mockito.anyString())).thenReturn(expected);
-        assertEquals(expected,mockRequest.getParameter("some string"));
+    public void testDoGet() {
+
+    }
+
+    @Test
+    public void testDoPost() {
+
 
     }
 }
