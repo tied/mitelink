@@ -50,16 +50,16 @@ public class MiteProjectCFType extends SelectCFType {
 
     // TODO@FE: add cache for json request instead of hammering the server
     private static final Logger log = LoggerFactory.getLogger( MiteProjectCFType.class );
-    private static PluginSettings settings;
+    private static PluginSettings settings = null;
 
     @Inject
     public MiteProjectCFType( CustomFieldValuePersister customFieldValuePersister, OptionsManager optionsManager, GenericConfigManager genericConfigManager, JiraBaseUrls jiraBaseUrls, PluginSettingsFactory pluginSettingsFactory ) {
         super( customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls );
+        this.jiraBaseUrls = jiraBaseUrls;
         this.optionsManager = optionsManager;
         this.genericConfigManager = genericConfigManager;
         this.customFieldValuePersister = customFieldValuePersister;
-        this.jiraBaseUrls = jiraBaseUrls;
-        this.settings = pluginSettingsFactory.createGlobalSettings();
+        this.pluginSettingsFactory = pluginSettingsFactory;
     }
 
     /**
@@ -76,9 +76,8 @@ public class MiteProjectCFType extends SelectCFType {
 
         log.debug( "Called getVelocityParameters" );
 
-        Map params = super.getVelocityParameters( issue, field, fieldLayoutItem );
-
         FieldConfig fieldConfig;
+        Map params = super.getVelocityParameters( issue, field, fieldLayoutItem );
 
         if ( issue == null ) {
             log.debug( "Issue is null" );
@@ -89,51 +88,24 @@ public class MiteProjectCFType extends SelectCFType {
             fieldConfig = field.getRelevantConfig( issue );
         }
 
-        // fetch current options
-        Options currentOptions = this.optionsManager.getOptions( fieldConfig );
-
-        // fetch current projects from mite
-        ArrayList<JSONObject> projectData = GetProjectList();
-
-        log.debug( "Number of fetched Mite-Projects: %d",projectData.size() );
-
-        if ( currentOptions.isEmpty() ) {
-
-            log.debug( "Options not present - fetching from remote" );
-
-            // simply add all projects as options
-            for ( JSONObject project : projectData ) {
-                String optionValue = GetFullProjectName( project );
-                this.optionsManager.createOption( fieldConfig, null, null, optionValue );
-            }
-
-        } else {
-
-            log.debug( "Options already present - updating with new values, if necessary");
-
-            // only insert newly added options by comparing new and old option values
-
-            // build a lookup table containing all current options
-            HashSet<String> currentOptionValues = new HashSet<>();
-
-            for ( Option option : currentOptions ) {
-                currentOptionValues.add( option.getValue() );
-            }
-
-            // compare current options with new ones
-            // if a value is not already present, add it
-            for ( JSONObject project : projectData ) {
-                String optionValue = GetFullProjectName( project );
-                if ( !currentOptionValues.contains( optionValue ) ) {
-                    log.debug( "Adding new option: %s ", optionValue );
-                    this.optionsManager.createOption( fieldConfig, null, null, optionValue );
-                }
-            }
-
+        // initialize settings, if not already initialized
+        // could be done in the constructor
+        if ( settings == null ) {
+            settings = this.pluginSettingsFactory.createGlobalSettings();
         }
 
+        // fetch a list of all current projects from mite
+        ArrayList<JSONObject> projectList = getProjectList(
+            ( String ) settings.get( "mitelink.config.account" ),
+            ( String ) settings.get( "mitelink.config.apikey" )
+        );
+
+
+        // insert newly added options by comparing new and old option values
+        updateFieldOptions( fieldConfig, projectList );
+
         // refresh newly updated options
-        currentOptions = this.optionsManager.getOptions( fieldConfig );
+        Options currentOptions = this.optionsManager.getOptions( fieldConfig );
 
         // create a key,value map that can be handed to the frontend
         // to be parsed into the fields options
@@ -144,6 +116,7 @@ public class MiteProjectCFType extends SelectCFType {
         if ( value != null ) {
             hasValue = true;
         }
+
         for ( Option option : currentOptions ) {
 
             results.put( option.getOptionId(), option.getValue() );
@@ -163,6 +136,32 @@ public class MiteProjectCFType extends SelectCFType {
         return params;
     }
 
+    private void updateFieldOptions( FieldConfig fieldConfig, ArrayList<JSONObject> projectData ) {
+        log.debug( "Updating options with new values, if necessary" );
+
+        // fetch current option-items for this particular field
+        // initially, it should only be one as JIRA requires at least one entry
+        // when registering the custom-field in the backend
+        Options currentOptions = this.optionsManager.getOptions( fieldConfig );
+
+        // build a lookup table containing all current options
+        HashSet<String> currentOptionValues = new HashSet<>();
+
+        for ( Option option : currentOptions ) {
+            currentOptionValues.add( option.getValue() );
+        }
+
+        // compare current options with new ones
+        // if an option is not already present, add it
+        for ( JSONObject project : projectData ) {
+            String optionValue = getFullProjectName( project );
+            if ( !currentOptionValues.contains( optionValue ) ) {
+                log.debug( "Adding new option: %s ", optionValue );
+                this.optionsManager.createOption( fieldConfig, null, null, optionValue );
+            }
+        }
+    }
+
     /**
      * Sends a GET request to a remote yolk Mite API-endpoint
      * Returns the response, which should be a JSON-String
@@ -170,8 +169,9 @@ public class MiteProjectCFType extends SelectCFType {
      * @param url The URL of the endpoint
      * @return The JSON-response from the server, or an empty string if the request was not successful
      */
-    private String SendGETRequest( String url ) {
+    public Map<String, String> sendGETRequest( String url ) {
 
+        Map<String, String> result = new HashMap<>();
         StringBuffer response = new StringBuffer();
 
         try {
@@ -188,15 +188,16 @@ public class MiteProjectCFType extends SelectCFType {
             }
             in.close();
 
-        }
-        catch ( MalformedURLException e ) {
-            log.error( "Method SendGETRequest threw MalformedURLException" ,e );
-        }
-        catch ( IOException e ) {
-            log.error( "Method SendGETRequest threw IOException" ,e );
+            result.put( "code", Integer.toString( con.getResponseCode() ) );
+        } catch ( MalformedURLException e ) {
+            log.error( "Method sendGETRequest threw MalformedURLException", e );
+        } catch ( IOException e ) {
+            log.error( "Method sendGETRequest threw IOException", e );
         }
 
-        return response.toString();
+        result.put( "response", response.toString() );
+
+        return result;
     }
 
     /**
@@ -204,22 +205,22 @@ public class MiteProjectCFType extends SelectCFType {
      *
      * @return A list of JSONObjects
      */
-    private ArrayList<JSONObject> GetProjectList() {
+    public ArrayList<JSONObject> getProjectList( String account, String key ) {
 
         ArrayList<JSONObject> projects = new ArrayList<>();
 
-        String account = ( String ) settings.get( "mitelink.config.account" );
-        String key = ( String ) settings.get( "mitelink.config.apikey" );
         String url = String.format( "https://%s.mite.yo.lk/projects.json?api_key=%s", account, key );
 
-        String JSONresponse = SendGETRequest( url );
+        String JSONResponse = sendGETRequest( url ).get( "response" );
+        JSONArray array = new JSONArray( JSONResponse );
 
-        JSONArray array = new JSONArray( JSONresponse );
         for ( int i = 0; i < array.length(); i++ ) {
             JSONObject jsonobject = array.getJSONObject( i );
             JSONObject project = jsonobject.getJSONObject( "project" );
             projects.add( project );
         }
+
+        log.debug( "Number of fetched Mite-Projects: %d", projects.size() );
 
         return projects;
     }
@@ -230,7 +231,7 @@ public class MiteProjectCFType extends SelectCFType {
      * @param project
      * @return The name of the project
      */
-    private String GetFullProjectName( JSONObject project ) {
+    public String getFullProjectName( JSONObject project ) {
 
         String identifier = "";
 
@@ -242,5 +243,4 @@ public class MiteProjectCFType extends SelectCFType {
 
         return identifier;
     }
-
 }
