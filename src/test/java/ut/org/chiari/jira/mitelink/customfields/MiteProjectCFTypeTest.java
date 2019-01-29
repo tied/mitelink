@@ -2,9 +2,6 @@ package ut.org.chiari.jira.mitelink.customfields;
 
 import com.atlassian.jira.issue.customfields.manager.GenericConfigManager;
 import com.atlassian.jira.issue.customfields.manager.OptionsManager;
-import com.atlassian.jira.issue.customfields.option.Option;
-import com.atlassian.jira.issue.customfields.option.Options;
-import com.atlassian.jira.issue.customfields.option.OptionsImpl;
 import com.atlassian.jira.issue.customfields.persistence.CustomFieldValuePersister;
 import com.atlassian.jira.issue.fields.rest.json.beans.JiraBaseUrls;
 import com.atlassian.sal.api.pluginsettings.PluginSettingsFactory;
@@ -62,7 +59,7 @@ public class MiteProjectCFTypeTest {
     @Test
     public void testSendGetRequest() {
         MiteProjectCFType testClass = Mockito.spy( new MiteProjectCFType( customFieldValuePersister, optionsManager, genericConfigManager, jiraBaseUrls, pluginSettingsFactory ) );
-        Map<String, String> result = testClass.sendGETRequest( "https://jsonplaceholder.typicode.com/posts/1" );
+        Map<String, String> result = testClass.sendAPIRequest( "https://jsonplaceholder.typicode.com/posts/1" );
         assertEquals( "200", result.get( "code" ) );
         assertTrue( !result.get( "response" ).isEmpty() );
     }
